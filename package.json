@@ -6,6 +6,13 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node app.js"
   },
+  "hosting": {
+    "public": "public",
+    "rewrites": [{
+      "source": "**",
+      "function": "app"
+    }]
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
