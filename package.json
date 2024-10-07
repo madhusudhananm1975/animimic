@@ -8,10 +8,12 @@
   },
   "hosting": {
     "public": "public",
-    "rewrites": [{
-      "source": "**",
-      "function": "app"
-    }]
+    "rewrites": [
+      {
+        "source": "**",
+        "function": "app"
+      }
+    ]
   },
   "keywords": [],
   "author": "",
@@ -23,5 +25,6 @@
     "mongodb": "^6.9.0",
     "mongoose": "^8.7.0"
   },
+  "devDependencies": {},
   "description": ""
 }

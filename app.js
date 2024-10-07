@@ -20,6 +20,8 @@ mongoose.connect(url)
 
 // Define a schema for the User collection
 const userSchema = new mongoose.Schema({
+  name: String,
+  mobile: String,
   username: String,
   email: String,
   password: String
@@ -51,18 +53,30 @@ const verifyToken = (req, res, next) => {
 app.post('/api/register', async (req, res) => {
   try {
     // Check if the email already exists
-    const existingUser = await User.findOne({ email: req.body.email });
-    if (existingUser) {
-      return res.status(400).json({ error: 'Email already exists' });
+    if(req.body.email != ""){
+      const existingUser = await User.findOne({ email: req.body.email });
+      if (existingUser) {
+        return res.status(400).json({ error: 'Email already exists' });
+      }
     }
+    else {
+      const existingUser = await User.findOne({ username: req.body.username });
+      if (existingUser) {
+        return res.status(400).json({ error: 'User Name already exists' });
+      }
+    }
+
 
     // Hash the password
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
+
 
     // Create a new user
     const newUser = new User({
       username: req.body.username,
       email: req.body.email,
+      name: req.body.name,
+      mobile:req.body.mobile,
       password: hashedPassword
     });
     
@@ -76,12 +90,22 @@ app.post('/api/register', async (req, res) => {
 // Route to authenticate and log in a user
 app.post('/api/login', async (req, res) => {
   try {
+    var user = await User.findOne({ email: req.body.email });
     // Check if the email exists
-    const user = await User.findOne({ email: req.body.email });
+  if (req.body.email)
+  {
+     user = await User.findOne({ email: req.body.email });
     if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Email Not Found' });
     }
 
+  } 
+  else {
+       user = await User.findOne({ username: req.body.username });
+      if (!user) {
+        return res.status(401).json({ error: 'User Not Found' });
+      }
+    } 
     // Compare passwords
     const passwordMatch = await bcrypt.compare(req.body.password, user.password);
     if (!passwordMatch) {
@@ -89,7 +113,9 @@ app.post('/api/login', async (req, res) => {
     }
 
     // Generate JWT token
+
     const token = jwt.sign({ email: user.email }, 'secret');
+   
     res.status(200).json({ token });
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
