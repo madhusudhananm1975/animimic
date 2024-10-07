@@ -25,6 +25,10 @@
     "mongodb": "^6.9.0",
     "mongoose": "^8.7.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/express": "^5.0.0",
+    "@types/jsonwebtoken": "^9.0.7"
+  },
   "description": ""
 }
