@@ -1,140 +1,287 @@
+// Importing required modules
 const express = require('express');
-const bcrypt = require("bcrypt");
 const mongoose = require('mongoose');
-const { check, validationResult } = require('express-validator/check');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const User = require('./api/models/user');
 
-const User = require("../models/user");
+// Creating an Express application instance
+const cors = require('cors')
+const app = express();
+const PORT = 3000;
+const url = 'mongodb+srv://testuser1:testUser123@animimic.nhuad.mongodb.net/?retryWrites=true&w=majority&appName=animimic'
 
-exports.user_signup = (req, res, next) => {
 
-  const errors = validationResult(req);
 
-  if (!errors.isEmpty()) {
-    console.log(errors.array());
-    return res.status(422).json({errors: errors.array()});
-  } else {
-    User.find({email: req.body.email})
-    .then(user => {
-      if (user.length >= 1) {
-        return res.status(409).json({message: "Account with this email already registered"});
-      } else {
-        bcrypt.hash(req.body.password, 10, (err, hash) => {
-          if (err) {
-            return res.status(500).json({error: err});
-          } else {
-            const user = new User({
-              _id: new mongoose.Types.ObjectId(),
-              name: req.body.name,
-              phoneNumber: req.body.phoneNumber,
-              email: req.body.email,
-              password: hash,
-            });
-            user.save()
-            .then(user => {
-              const token = jwt.sign({phoneNumber: user.phoneNumber, email: user.email}, process.env.JWT_SECRET)
-              res.status(201).json({message: "User created", token});
-            })
-            .catch(err => {
-              console.log(err);
-              res.status(500).json({error: err});
-            });
-          }
-        });
-      }
-    });
+app.use(cors());
+// Connect to MongoDB database
+mongoose.connect(url).then(() => { console.log('Connected to MongoDB'); })
+.catch((error) => {
+  console.error('Error connecting to MongoDB:', error);
+});
+
+// Middleware to parse JSON bodies
+app.use(express.json());
+
+// Middleware for JWT validation
+const verifyToken = (req, res, next) => {
+  const token = req.headers['authorization'];
+  if (!token) {
+    return res.status(401).json({ error: 'Unauthorized' });
   }
-}
 
-exports.user_login = (req, res, next) => {
-  User.findOne({email: req.body.email}).exec().then(user => {
-    if (!user) {
-      return res.status(401).json({message: 'Auth failed'});
-    }
-    bcrypt.compare(req.body.password, user.password, (err, result) => {
-      if (err) {
-        return res.status(401).json({message: 'Auth failed'});
-      }
-      if (result) {
-        return res.status(200).json({message: 'Auth successful'});
-      }
-      res.status(401).json({message: 'Auth failed'});
-    });
-  }).catch(err => {
-    console.log(err);
-    res.status(500).json({error: err});
-  });
-};
-
-exports.user_delete = (req, res, next) => {
-  User.remove({_id: req.params.userId}).exec().then(result => {
-    res.status(200).json({message: 'User deleted'});
-  }).catch(err => {
-    console.log(err);
-    res.status(500).json({error: err});
-  });
-};
-
-exports.user_update = (req, res, next) => {
-  User.update({name: req.body.name, phoneNumber: req.body.phoneNumber}).exec().then(result => {
-    res.status(200).json({message: 'User updated'});
-  }).catch(err => {
-    console.log(err);
-    res.status(500).json({error: err});
-  });
-};
-
-exports.change_password = (req, res, next) => {
-
-const errors = validationResult(req);
-
-if (!errors.isEmpty()) {
-  console.log(errors.array());
-  return res.status(422).json({errors: errors.array()});
-} else {
-  User.update({password: req.body.password})
-  .exec()
-  .then(bcrypt.hash(req.body.password, 10, (err, hash) => {
+  jwt.verify(token, 'secret', (err, decoded) => {
     if (err) {
-      return res.status(500).json({error: err});
-    } else {
-      User.findById(req.params.userId, (err, user) => {
-        if (err) {
-          return next(err);
-        }
-        user.password = hash
-        user.save()
-      })
-      .then(result => {
-        res.status(201).json({message: "password changed"});
-      })
-      .catch(err => {
-        console.log(err);
-        res.status(500).json({error: err});
-      });
+      return res.status(401).json({ error: 'Unauthorized' });
     }
-  }));
-}
-};
-
-exports.all_users = (req, res, next) => {
-  User.find({}).exec().then(result => {
-    res.status(200).json({result});
-  }).catch(err => {
-    console.log(err);
-    res.status(500).json({error: err});
+    req.user = decoded;
+    next();
   });
 };
 
-exports.user_logout = (req, res, next) => {
-  if (req.session) {
-    req.session.destroy(function(err) {
-      if(err) {
-        res.status(500).json({error: err});
-        return next(err);
-      } else {
-        return res.redirect('/');
+// Route to register a new user
+app.post('/api/register', async (req, res) => {
+  try {
+    var mobile = "";
+
+    var hashedSecAnswer = "";
+    var tmpsecanswer1 = "";
+    var tmpsecanswer2 = "";
+    var tmpsecanswer3 = "";
+    var tmpsecquestion1 = "";
+    var tmpsecquestion2 = "";
+    var tmpsecquestion3 = "";
+    var tmpphotolink = "";
+
+    // Check if the email already exists
+    if(req.body.email != ""){
+      const existingUser = await User.findOne({ email: req.body.email });
+      if (existingUser) {
+        return res.status(400).json({ error: 'Email already exists' });
       }
+    }
+    else {
+      const existingUser = await User.findOne({ username: req.body.username });
+      if (existingUser) {
+        return res.status(400).json({ error: 'User Name already exists' });
+      }
+    }
+
+
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(req.body.password, 10);
+    
+    if(req.body.photolink)
+    {
+        tmpphotolink = req.body.photolink;       
+    }
+    if(req.body.secquestion1)
+    {
+      tmpsecquestion1 = req.body.secquestion1;
+    }
+    if(req.body.secquestion2)
+    {
+      tmpsecquestion2 = req.body.secquestion2;
+    }
+    if(req.body.secquestion3)
+    {
+      tmpsecquestion3 = req.body.secquestion3;
+    }
+    if(req.body.secanswer1)
+    {
+      tmpsecanswer1 = await bcrypt.hash(req.body.secanswer1, 10);
+    }
+    if(req.body.secanswer2)
+    {
+      tmpsecanswer2 = await bcrypt.hash(req.body.secanswer2, 10);
+    }
+    if(req.body.secanswer3)
+    {
+      tmpsecanswer3 = await bcrypt.hash(req.body.secanswer3, 10);
+    }
+
+
+
+
+    // Create a new user
+    const newUser = new User({ 
+      name: req.body.name,
+      username: req.body.username,
+      mobile: req.body.mobile,
+      email: req.body.email,
+      password: hashedPassword,
+      photolink: tmpphotolink,
+      secquestion1: tmpsecquestion1,
+      secquestion2: tmpsecquestion2,
+      secquestion3: tmpsecquestion3,
+      secanswer1: tmpsecanswer1,
+      secanswer2: tmpsecanswer2,
+      secanswer3: tmpsecanswer3
     });
+
+    await newUser.save();
+    return res.status(201).json({ message: 'User registered successfully' });
+  } catch (error) {
+    return res.status(500).json({ error: 'Internal server error' });
   }
-};
+});
+
+// Route to authenticate and log in a user
+app.post('/api/login', async (req, res) => {
+  try {
+    var user = await User.findOne({ email: req.body.email });
+    // Check if the email exists
+  if (req.body.email)
+  {
+     user = await User.findOne({ email: req.body.email });
+    if (!user) {
+      return res.status(401).json({ error: 'Email Not Found' });
+    }
+
+  } 
+  else { //else use username instead of email. front end will ensure at least one of them is sent in api
+       user = await User.findOne({ username: req.body.username });
+      if (!user) {
+        return res.status(401).json({ error: 'User Not Found' });
+      }
+    } 
+
+    // Compare passwords
+    const passwordMatch = await bcrypt.compare(req.body.password, user.password);
+
+    if (!passwordMatch) {
+      return res.status(401).json({ error: 'Invalid credentials.' });
+    }
+
+    // Generate JWT token
+
+    const token = jwt.sign({ email: user.email }, 'secret');
+   
+    res.status(200).json({ token });
+  } catch (error) {
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.put('/api/update', verifyToken, async (req, res) => {// user can come to update screen only when logged in.
+  try{
+    console.log("request ");
+
+    if(!req.body.email)
+    {
+      return res.status(401).json({ error: 'Invalid Email.' });
+    }
+    console.log("request ");
+    console.log(req);
+    if(req.body.name != "")
+    {
+      await User.updateOne( {email:req.body.email}, { $set: {name: req.body.name} } ) 
+    };
+    if(req.body.mobile != "")
+    {
+      await User.updateOne( {email:req.body.email}, { $set: {mobile: req.body.mobile} } ) 
+    };
+    if(req.body.secquestion1 != "")
+    {
+        await User.updateOne( {email:req.body.email}, { $set: {secquestion: req.body.secquestion1} } ) 
+    };
+    if(req.body.secanswer1 != "")
+    {
+          const hashedSecAnswer = await bcrypt.hash(req.body.secanswer1, 10);
+          await User.updateOne( {email:req.body.email}, { $set: {secanswer1: hashedSecAnswer} } ) 
+    };
+    if(req.body.secquestion2 != "")
+    {
+          await User.updateOne( {email:req.body.email}, { $set: {secquestion: req.body.secquestion2} } ) 
+    };
+    if(req.body.secanswer2 != "")
+    {
+          const hashedSecAnswer = await bcrypt.hash(req.body.secanswer2, 10);
+          await User.updateOne( {email:req.body.email}, { $set: {secanswer2: hashedSecAnswer} } ) 
+    };
+    if(req.body.secquestion3 != "")
+    {
+          await User.updateOne( {email:req.body.email}, { $set: {secquestion: req.body.secquestion3} } ) 
+    };
+    if(req.body.secanswer3 != "")
+    {
+          const hashedSecAnswer = await bcrypt.hash(req.body.secanswer3, 10);
+          await User.updateOne( {email:req.body.email}, { $set: {secanswer3: hashedSecAnswer} } ) 
+    };
+    if(req.body.photolink != "")
+    {
+          await User.updateOne( {email:req.body.email}, { $set: {photolink: req.body.photolink} } ) 
+    };
+
+    
+    return res.status(200).json({message: 'User updated'});
+  }
+  catch(error) {
+    return res.status(500).json({ error: 'Internal server error' });
+  };
+});
+
+
+app.post('/api/reset', verifyToken, async (req, res) => {// user can come to update screen only when logged in.
+  try{
+    const user = await User.findOne({ email: req.body.email });
+    //check if secanswer matches with any of the 3 secanswers already  present in table for that user.
+    if(req.body.secanswer != "")
+    {
+      const secanswermatch = await bcrypt.compare(req.body.secanswer, user.secanswer1);
+      if (!secanswermatch) 
+      {
+        const secanswermatch = await bcrypt.compare(req.body.secanswer, user.secanswer2);
+        if (!secanswermatch)
+        {
+          const secanswermatch = await bcrypt.compare(req.body.secanswer, user.secanswer3);
+          if (!secanswermatch)
+          {
+            return res.status(401).json({ error: 'Invalid Answer to Security Question.' });
+          }
+        }
+      }
+      const hashedPassword = await bcrypt.hash(req.body.password, 10);
+          await User.updateOne( {email:req.body.email}, { $set: {password: hashedPassword} } ) 
+          return res.status(200).json({message: 'Pawssword updated'});
+    }; 
+    return res.status(200).json({message: 'Pawssword missing'});
+  }
+  catch(error) {
+    return res.status(500).json({ error: 'Internal server error' });
+  };
+});
+
+
+
+// Protected route to get user details
+app.get('/api/user', verifyToken, async (req, res) => {
+  try {
+    // Fetch user details using decoded token
+    const user = await User.findOne({ email: req.user.email });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.status(200).json({ username: user.username, email: user.email, mobile: user.mobile, 
+                          name: user.name, secquestion1: user.secquestion1,
+                          secquestion2: user.secquestion2, secquestion3: user.secquestion3,
+                          photolink: user.photolink
+                         });
+  } catch (error) {
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Default route
+app.get('/', (req, res) => {
+  res.send('Welcome to Animimic API');
+});
+
+// Using cors as a middleware
+app.get('/user-auth-api-articles',cors(),
+    (req,res) => res.json('user-auth-api-articles'))
+
+// Start the server
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
