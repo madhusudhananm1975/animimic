@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('./api/models/user');
+const Blogs = require('./api/models/blog');
 
 // Creating an Express application instance
 const cors = require('cors')
@@ -42,9 +43,9 @@ const verifyToken = (req, res, next) => {
 // Route to register a new user
 app.post('/api/register', async (req, res) => {
   try {
-    var mobile = "";
+    var tmpmobile = "";
+    var tmpname = "";
 
-    var hashedSecAnswer = "";
     var tmpsecanswer1 = "";
     var tmpsecanswer2 = "";
     var tmpsecanswer3 = "";
@@ -52,6 +53,7 @@ app.post('/api/register', async (req, res) => {
     var tmpsecquestion2 = "";
     var tmpsecquestion3 = "";
     var tmpphotolink = "";
+    
 
     // Check if the email already exists
     if(req.body.email != ""){
@@ -99,15 +101,22 @@ app.post('/api/register', async (req, res) => {
     {
       tmpsecanswer3 = await bcrypt.hash(req.body.secanswer3, 10);
     }
-
+    if(req.body.mobile)
+    {
+        tmpmobile = req.body.mobile;
+    }
+    if(req.body.name)
+    {
+        tmpname = req.body.name;
+    }
 
 
 
     // Create a new user
     const newUser = new User({ 
-      name: req.body.name,
+      name: tmpname,
       username: req.body.username,
-      mobile: req.body.mobile,
+      mobile: tmpmobile,
       email: req.body.email,
       password: hashedPassword,
       photolink: tmpphotolink,
@@ -116,7 +125,10 @@ app.post('/api/register', async (req, res) => {
       secquestion3: tmpsecquestion3,
       secanswer1: tmpsecanswer1,
       secanswer2: tmpsecanswer2,
-      secanswer3: tmpsecanswer3
+      secanswer3: tmpsecanswer3,
+      account_info:{total_posts: 0, total_reads: 0},
+      
+
     });
 
     await newUser.save();
@@ -128,6 +140,7 @@ app.post('/api/register', async (req, res) => {
 
 // Route to authenticate and log in a user
 app.post('/api/login', async (req, res) => {
+  var userid = "";
   try {
     var user = await User.findOne({ email: req.body.email });
     // Check if the email exists
@@ -136,6 +149,11 @@ app.post('/api/login', async (req, res) => {
      user = await User.findOne({ email: req.body.email });
     if (!user) {
       return res.status(401).json({ error: 'Email Not Found' });
+    }
+    else
+    {
+      userid = user.id;
+      console.log(userid);
     }
 
   } 
@@ -156,8 +174,9 @@ app.post('/api/login', async (req, res) => {
     // Generate JWT token
 
     const token = jwt.sign({ email: user.email }, 'secret');
+    
    
-    res.status(200).json({ token });
+    res.status(200).json({ token, userid });
   } catch (error) {
     return res.status(500).json({ error: 'Internal server error' });
   }
@@ -270,6 +289,391 @@ app.get('/api/user', verifyToken, async (req, res) => {
   } catch (error) {
     return res.status(500).json({ error: 'Internal server error' });
   }
+});
+
+/* POST Create Blog */
+app.post('/api/blog', async (req, res, next) => {
+  //const { blog_id, title, author, content } = req.body;
+
+  var tmpblog_id = "";
+  var tmptitle = "";
+  var tmpbanner = "";
+  var tmpdes = "";
+  var tmpcontent = "";
+  var tmptags = "";
+  var tmpauthor = "";
+  var tmptotal_likes = 0;
+  var tmptotal_comments = 0;
+  var tmptotal_reads = 0;
+  var tmptotal_parent_comments =  0;
+  var tmpcomments = "";
+  var tmpdraft = "";
+
+  if (req.body.blog_id)
+  {
+     tmpblog_id = req.body.blog_id;
+  }
+  if (req.body.title)
+  {
+    tmptitle = req.body.title;
+  }
+  if (req.body.banner)
+  {
+    tmpbanner = req.body.banner;
+  }
+  if (req.body.des)
+  {
+     tmpdes = req.body.des;
+  }
+  if (req.body.content)
+  {
+     tmpcontent = req.body.content;
+  }
+  if (req.body.tags)
+  {
+     tmptags = req.body.tags;
+  }
+  if (req.body.author)
+  {
+     tmpauthor = req.body.author;
+     if (mongoose.isValidObjectId(req.body.author))
+     {
+      author = await User.findById(req.body.author);
+      if (author == null)
+      {
+       return res.status(401).json({
+         statusCode: 401,
+         message: `Invalid Author id`,
+         data: {},
+       });
+      }
+     }
+     else{
+      return res.status(401).json({
+        statusCode: 401,
+        message: `Invalid Author id`,
+        data: {},
+      });
+     }
+
+  }
+  if (req.body.activity.total_likes)
+  {
+     if (!isNaN)
+     {
+      tmptotal_likes = req.body.activity.total_likes;
+     }
+    
+  }
+  if (req.body.activity.total_comments)
+  {
+    if (!isNaN)
+      {
+     tmptotal_comments = req.body.activity.total_comments;
+      }
+  }
+  if (req.body.activity.total_reads)
+  {
+    if (!isNaN)
+      {
+     tmptotal_reads = req.body.activity.total_reads;
+      }
+  }
+  if (req.body.activity.total_parent_comments)
+  {
+    if (!isNaN)
+      {
+      tmptotal_parent_comments = req.body.activity.total_parent_comments;
+      }
+  }
+  if (req.body.comments)
+  {
+     tmpcomments = req.body.comments;
+  }
+  if (req.body.draft)
+  {
+      tmpdraft = req.body.draft;
+  }
+
+
+ 
+try
+{
+  // Create a new post
+  const post = new Blogs({
+    blog_id:  tmpblog_id,
+    title : req.body.title,
+    banner : tmpbanner,
+    des : tmpdes,
+    content : tmpcontent,
+    tags : tmptags,
+    author : tmpauthor,
+    activity: {
+      total_likes : tmptotal_likes,
+      total_comments : tmptotal_comments,
+      total_reads : tmptotal_reads,
+      total_parent_comments :  tmptotal_parent_comments,
+    },
+   // comments: tmpcomments,
+    draft: tmpdraft,
+  });
+  // Save the post into the DB
+  await post.save();
+  return res.status(201).json({
+    statusCode: 201,
+    message: 'Created Blog post',
+    data: { post },
+  });
+}
+catch(error){
+  return res.status(401).json({
+    statusCode: 401,
+    message: "data type mismatch " + error,
+    data: {  },
+  });
+}
+
+});
+
+
+/* PUT blog for update */
+app.put('/api/updateblog', async (req, res) => {
+  //const { blog_id, title, author, content } = req.body;
+
+  var tmpblog_id = "";
+  var tmptitle = "";
+  var tmpbanner = "";
+  var tmpdes = "";
+  var tmpcontent = "";
+  var tmptags = "";
+  var tmpauthor = "";
+  var tmptotal_likes = 0;
+  var tmptotal_comments = 0;
+  var tmptotal_reads = "";
+  var tmptotal_parent_comments =  "";
+  var tmpcomments = "";
+  var tmpdraft = "";
+  var statusmessage = "";
+
+  if (req.body.blog_id)
+    {
+      tmpblog_id = req.body.blog_id;
+       if (mongoose.isValidObjectId(req.body.blog_id))
+       {
+        blodid = await Blogs.findById(req.body.blog_id);
+        if (blodid == null)
+        {
+         return res.status(401).json({
+           statusCode: 401,
+           message: `Invalid BLog id`,
+           data: {},
+         });
+        }
+       }
+       else{
+        return res.status(401).json({
+          statusCode: 401,
+          message: `Invalid BLog id`,
+          data: {},
+        });
+       }
+  
+    }
+  if (req.body.title)
+  {
+    tmptitle = req.body.title;
+  }
+  if (req.body.banner)
+  {
+    tmpbanner = req.body.banner;
+  }
+  if (req.body.des)
+  {
+     tmpdes = req.body.des;
+  }
+  if (req.body.content)
+  {
+     tmpcontent = req.body.content;
+  }
+  if (req.body.tags)
+  {
+     tmptags = req.body.tags;
+  }
+  if (req.body.author)
+    {
+       tmpauthor = req.body.author;
+       if (mongoose.isValidObjectId(req.body.author))
+       {
+        author = await User.findById(req.body.author);
+        if (author == null)
+        {
+         return res.status(401).json({
+           statusCode: 401,
+           message: `Invalid Author id`,
+           data: {},
+         });
+        }
+       }
+       else{
+        return res.status(401).json({
+          statusCode: 401,
+          message: `Invalid Author id`,
+          data: {},
+        });
+       }
+  
+    }
+    if (req.body.activity.total_likes)
+      {
+         if (!isNaN)
+         {
+          tmptotal_likes = req.body.activity.total_likes;
+         }
+        
+      }
+      if (req.body.activity.total_comments)
+      {
+        if (!isNaN)
+          {
+         tmptotal_comments = req.body.activity.total_comments;
+          }
+      }
+      if (req.body.activity.total_reads)
+      {
+        if (!isNaN)
+          {
+         tmptotal_reads = req.body.activity.total_reads;
+          }
+      }
+      if (req.body.activity.total_parent_comments)
+      {
+        if (!isNaN)
+          {
+          tmptotal_parent_comments = req.body.activity.total_parent_comments;
+          }
+      }
+  if (req.body.comments)
+  {
+     tmpcomments = req.body.comments;
+  }
+  if (req.body.draft)
+  {
+      tmpdraft = req.body.draft;
+  }
+
+
+ author = await User.findById(req.body.author);
+ if (author == null)
+ {
+  return res.status(401).json({
+    statusCode: 401,
+    message: `Invalid Author id`,
+    data: {},
+  });
+ }
+ 
+try{
+
+  // Update the existing blog
+  const post = await Blogs.findByIdAndUpdate(
+    req.body.blog_id,
+{
+    //blog_id:  tmpblog_id,
+    title : req.body.title,
+    banner : tmpbanner,
+    des : tmpdes,
+    content : tmpcontent,
+    tags : tmptags,
+    author : tmpauthor,
+    activity: {
+      total_likes : tmptotal_likes,
+      total_comments : tmptotal_comments,
+      total_reads : tmptotal_reads,
+      total_parent_comments :  tmptotal_parent_comments,
+    },
+    comments: tmpcomments,
+    usercomments: req.body.usercomments,
+    draft: tmpdraft,
+  },
+ 
+
+);
+if(post != null){
+  statusmessage = "update successful";
+}
+else
+{
+  statusmessage = "update failed."
+}
+
+return res.status(200).json({
+  statusCode: 200,
+  message: statusmessage,
+  data: { post },
+});
+
+}
+catch(error)
+{
+  statusmessage = error;
+  return res.status(401).json({
+    statusCode: 401,
+    message: "Invalid data type. " + statusmessage,
+    data: {  },
+  });
+}
+
+}
+);
+
+
+/* DELETE post */
+app.delete('/api/deleteblog', async (req, res) => {
+
+  try{
+
+  if (req.body.id)
+    {
+       if (mongoose.isValidObjectId(req.body.id))
+       {
+        blogdid = await Blogs.findById(req.body.id);
+        if (blogdid == null)
+        {
+         return res.status(401).json({
+           statusCode: 401,
+           message: `Invalid BLog id`,
+           data: {},
+         });
+        }
+        else{
+              // Mongo stores the id as `_id` by default
+              const result = await Blogs.deleteOne({ _id: req.body.id });
+              return res.status(200).json({
+                statusCode: 200,
+                message: `Deleted ${result.deletedCount} post(s)`,
+                data: {},
+              });
+        }
+       }
+       else{
+        return res.status(401).json({
+          statusCode: 401,
+          message: `Invalid BLog id`,
+          data: {},
+        });
+       }
+  
+    }
+}
+catch (error)
+{
+  return res.status(401).json({
+    statusCode: 401,
+    message: error,
+    data: {},
+  });
+}
+
 });
 
 // Default route

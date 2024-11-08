@@ -57,6 +57,12 @@ const blogSchema = mongoose.Schema({
         type: [Schema.Types.ObjectId],
         ref: 'comments'
     },
+    usercomments: {
+        type: [],
+        comment: String,
+        email: String,
+        user:Schema.Types.ObjectId,
+    },
     draft: {
         type: Boolean,
         default: false
@@ -70,4 +76,4 @@ const blogSchema = mongoose.Schema({
 
 })
 
-module.exports = mongoose.model("blogs", blogSchema);
+module.exports = mongoose.model("Blogs", blogSchema);
