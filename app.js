@@ -701,41 +701,69 @@ app.get('/api/allblogs', async (req, res) => {
 app.get('/api/getblog', async (req, res) => {
   // sort from the latest to the earliest
 //  const posts = await Blogs.find().sort({ createdAt: 'desc' });
-if (mongoose.isValidObjectId(req.body.author))
-  {
-    if(req.body.blog_id) // If blog_id is sent then filter by author and blog_id
+if (req.body.author)
+{
+  if (mongoose.isValidObjectId(req.body.author))
     {
-       posts =  await Blogs.find({ author: req.body.author, blog_id: req.body.blog_id});
-    }
-    else // if no blog_id sent then filter by author id  only
-    {
-       posts =  await Blogs.find({ author: req.body.author});
-    }
-    if (posts != null)
-    {
-      return res.status(200).json({
-        statusCode: 200,
-        message: 'blogs received ',
-        data: { posts },
-      });
-    }
-    else{
-      return res.status(200).json({
-        statusCode: 200,
-        message: 'No blogs to return ',
-        data: {  },
-      });
-
-    }
+      if(req.body.banner) // If blog_id is sent then filter by author and blog_id
+      {
+         posts =  await Blogs.find({ author: req.body.author, blog_id: req.body.banner});
+      }
+      else // if no blog_id sent then filter by author id  only
+      {
+         posts =  await Blogs.find({ author: req.body.author});
+      }
+      if (posts != null)
+      {
+        return res.status(200).json({
+          statusCode: 200,
+          message: 'blogs received ',
+          data: { posts },
+        });
+      }
+      else{
+        return res.status(200).json({
+          statusCode: 200,
+          message: 'No blogs to return ',
+          data: {  },
+        });
+  
+      }
+  }
+  else{
+    return res.status(401).json({
+      statusCode: 401,
+      message: `Invalid Author detail`,
+      data: {},
+    });
+   }
 
 }
-else{
-  return res.status(401).json({
-    statusCode: 401,
-    message: `Invalid Author detail`,
-    data: {},
-  });
- }
+else
+{
+  if(req.body.banner) // If blog_id is sent then filter by author and blog_id
+  {
+     posts =  await Blogs.find({blog_id: req.body.banner});
+  }
+  if (posts != null)
+  {
+    return res.status(200).json({
+      statusCode: 200,
+      message: 'blogs received ',
+      data: { posts },
+    });
+  }
+  else{
+    return res.status(200).json({
+      statusCode: 200,
+      message: 'No blogs to return ',
+      data: {  },
+    });
+
+  }
+
+}
+
 });
 
 // Default route
