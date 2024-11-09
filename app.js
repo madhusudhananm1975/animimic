@@ -185,48 +185,55 @@ app.post('/api/login', async (req, res) => {
 //app.put('/api/update', verifyToken, async (req, res) => {// user can come to update screen only when logged in.
 app.put('/api/update', async (req, res) => {// user can come to update screen only when logged in.
   try{
-    console.log("request ");
 
     if(!req.body.email)
     {
       return res.status(401).json({ error: 'Invalid Email.' });
     }
-    if(req.body.name != "")
+    if (req.body.email)
+    {
+       test =  await User.find({email: req.body.email});
+       if(test == [])
+       {
+        return res.status(401).json({ error: 'Please enter valid Email.' });
+       }    
+    }
+    if(req.body.name)
     {
       await User.updateOne( {email:req.body.email}, { $set: {name: req.body.name} } ) 
     };
-    if(req.body.mobile != "")
+    if(req.body.mobile)
     {
       await User.updateOne( {email:req.body.email}, { $set: {mobile: req.body.mobile} } ) 
     };
-    if(req.body.secquestion1 != "")
+    if(req.body.secquestion1)
     {
-        await User.updateOne( {email:req.body.email}, { $set: {secquestion: req.body.secquestion1} } ) 
+        await User.updateOne( {email:req.body.email}, { $set: {secquestion1: req.body.secquestion1} } ) 
     };
-    if(req.body.secanswer1 != "")
+    if(req.body.secanswer1)
     {
           const hashedSecAnswer = await bcrypt.hash(req.body.secanswer1, 10);
           await User.updateOne( {email:req.body.email}, { $set: {secanswer1: hashedSecAnswer} } ) 
     };
-    if(req.body.secquestion2 != "")
+    if(req.body.secquestion2)
     {
-          await User.updateOne( {email:req.body.email}, { $set: {secquestion: req.body.secquestion2} } ) 
+          await User.updateOne( {email:req.body.email}, { $set: {secquestion2: req.body.secquestion2} } ) 
     };
-    if(req.body.secanswer2 != "")
+    if(req.body.secanswer2)
     {
           const hashedSecAnswer = await bcrypt.hash(req.body.secanswer2, 10);
           await User.updateOne( {email:req.body.email}, { $set: {secanswer2: hashedSecAnswer} } ) 
     };
-    if(req.body.secquestion3 != "")
+    if(req.body.secquestion3)
     {
-          await User.updateOne( {email:req.body.email}, { $set: {secquestion: req.body.secquestion3} } ) 
+          await User.updateOne( {email:req.body.email}, { $set: {secquestion3: req.body.secquestion3} } ) 
     };
-    if(req.body.secanswer3 != "")
+    if(req.body.secanswer3)
     {
           const hashedSecAnswer = await bcrypt.hash(req.body.secanswer3, 10);
           await User.updateOne( {email:req.body.email}, { $set: {secanswer3: hashedSecAnswer} } ) 
     };
-    if(req.body.photolink != "")
+    if(req.body.photolink)
     {
           await User.updateOne( {email:req.body.email}, { $set: {photolink: req.body.photolink} } ) 
     };
@@ -242,23 +249,55 @@ app.put('/api/update', async (req, res) => {// user can come to update screen on
 
 app.post('/api/reset', verifyToken, async (req, res) => {// user can come to update screen only when logged in.
   try{
+
+    if(!req.body.email){
+      return res.status(200).json({message: 'Please provide email for password reset'});
+    }
+    if(!req.body.secanswer){
+      return res.status(200).json({message: 'Please provide security answer for password reset'});
+    }
+    if(!req.body.secquestion){
+      return res.status(200).json({message: 'Please provide security question for password reset'});
+    }
+    var questionmatch = false;
     const user = await User.findOne({ email: req.body.email });
     //check if secanswer matches with any of the 3 secanswers already  present in table for that user.
     if(req.body.secanswer != "")
     {
       const secanswermatch = await bcrypt.compare(req.body.secanswer, user.secanswer1);
+      if(req.body.secquestion == user.secquestion1)
+      {
+        questionmatch = true;
+        console.log(user.secquestion1);
+      }
       if (!secanswermatch) 
       {
+        questionmatch = false;
         const secanswermatch = await bcrypt.compare(req.body.secanswer, user.secanswer2);
+        if(req.body.secquestion == user.secquestion2)
+          {
+            questionmatch = true;
+          }
         if (!secanswermatch)
         {
+          questionmatch = false;
           const secanswermatch = await bcrypt.compare(req.body.secanswer, user.secanswer3);
-          if (!secanswermatch)
-          {
-            return res.status(401).json({ error: 'Invalid Answer to Security Question.' });
-          }
+          if(req.body.secquestion == user.secquestion3)
+            {
+              questionmatch = true;
+            }
+
         }
       }
+      if (!secanswermatch) 
+      {
+          return res.status(401).json({ error: 'Invalid Security Answer.' });
+      }
+      if (!questionmatch)
+      {
+          return res.status(401).json({ error: 'Invalid Security Question.' });
+      }
+
       const hashedPassword = await bcrypt.hash(req.body.password, 10);
           await User.updateOne( {email:req.body.email}, { $set: {password: hashedPassword} } ) 
           return res.status(200).json({message: 'Pawssword updated'});
