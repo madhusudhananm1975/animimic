@@ -62,7 +62,7 @@ app.post('/api/register', async (req, res) => {
         return res.status(400).json({ error: 'Email already exists' });
       }
     }
-    else {
+    if (req.body.username){
       const existingUser = await User.findOne({ username: req.body.username });
       if (existingUser) {
         return res.status(400).json({ error: 'User Name already exists' });
@@ -134,7 +134,7 @@ app.post('/api/register', async (req, res) => {
     await newUser.save();
     return res.status(201).json({ message: 'User registered successfully' });
   } catch (error) {
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error.' + error});
   }
 });
 
