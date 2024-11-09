@@ -679,21 +679,63 @@ catch (error)
 app.get('/api/allblogs', async (req, res) => {
   // sort from the latest to the earliest
   const posts = await Blogs.find().sort({ createdAt: 'desc' });
-  return res.status(200).json({
-    statusCode: 200,
-    message: 'Fetched all blogs',
-    data: { posts },
-  });
+  if (posts != null)
+  {
+    return res.status(200).json({
+      statusCode: 200,
+      message: 'Fetched all blogs',
+      data: { posts },
+    });
+  }
+  else
+  {
+    return res.status(200).json({
+      statusCode: 200,
+      message: 'No blog exists',
+      data: { },
+    });
+  }
+
 });
 
 app.get('/api/getblog', async (req, res) => {
   // sort from the latest to the earliest
-  const posts = await Blogs.find().sort({ createdAt: 'desc' });
-  return res.status(200).json({
-    statusCode: 200,
-    message: 'Fetched all blogs',
-    data: { posts },
+//  const posts = await Blogs.find().sort({ createdAt: 'desc' });
+if (mongoose.isValidObjectId(req.body.author))
+  {
+    if(req.body.blog_id) // If blog_id is sent then filter by author and blog_id
+    {
+       posts =  await Blogs.find({ author: req.body.author, blog_id: req.body.blog_id});
+    }
+    else // if no blog_id sent then filter by author id  only
+    {
+       posts =  await Blogs.find({ author: req.body.author});
+    }
+    if (posts != null)
+    {
+      return res.status(200).json({
+        statusCode: 200,
+        message: 'blogs received ',
+        data: { posts },
+      });
+    }
+    else{
+      return res.status(200).json({
+        statusCode: 200,
+        message: 'No blogs to return ',
+        data: {  },
+      });
+
+    }
+
+}
+else{
+  return res.status(401).json({
+    statusCode: 401,
+    message: `Invalid Author detail`,
+    data: {},
   });
+ }
 });
 
 // Default route
