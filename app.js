@@ -182,7 +182,8 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-app.put('/api/update', verifyToken, async (req, res) => {// user can come to update screen only when logged in.
+//app.put('/api/update', verifyToken, async (req, res) => {// user can come to update screen only when logged in.
+app.put('/api/update', async (req, res) => {// user can come to update screen only when logged in.
   try{
     console.log("request ");
 
@@ -190,8 +191,6 @@ app.put('/api/update', verifyToken, async (req, res) => {// user can come to upd
     {
       return res.status(401).json({ error: 'Invalid Email.' });
     }
-    console.log("request ");
-    console.log(req);
     if(req.body.name != "")
     {
       await User.updateOne( {email:req.body.email}, { $set: {name: req.body.name} } ) 
@@ -674,6 +673,27 @@ catch (error)
   });
 }
 
+});
+
+
+app.get('/api/allblogs', async (req, res) => {
+  // sort from the latest to the earliest
+  const posts = await Blogs.find().sort({ createdAt: 'desc' });
+  return res.status(200).json({
+    statusCode: 200,
+    message: 'Fetched all blogs',
+    data: { posts },
+  });
+});
+
+app.get('/api/getblog', async (req, res) => {
+  // sort from the latest to the earliest
+  const posts = await Blogs.find().sort({ createdAt: 'desc' });
+  return res.status(200).json({
+    statusCode: 200,
+    message: 'Fetched all blogs',
+    data: { posts },
+  });
 });
 
 // Default route
