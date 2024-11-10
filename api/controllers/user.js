@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('./api/models/user');
-const Blogs = require('./api/models/blog');
+const User = require('./api/models/blog');
 
 // Creating an Express application instance
 const cors = require('cors')
@@ -41,7 +41,8 @@ const verifyToken = (req, res, next) => {
 };
 
 // Route to register a new user
-app.post('/api/register', async (req, res) => {
+exports.user_signup =async (req, res) => {
+//app.post('/api/register', async (req, res) => {
   try {
     var tmpmobile = "";
     var tmpname = "";
@@ -136,7 +137,7 @@ app.post('/api/register', async (req, res) => {
   } catch (error) {
     return res.status(500).json({ error: 'Internal server error.' + error});
   }
-});
+};
 
 // Route to authenticate and log in a user
 app.post('/api/login', async (req, res) => {
@@ -247,7 +248,7 @@ app.put('/api/update', async (req, res) => {// user can come to update screen on
 });
 
 
-app.post('/api/reset', async (req, res) => {// user can come to update screen only when logged in.
+app.post('/api/reset', verifyToken, async (req, res) => {// user can come to update screen only when logged in.
   try{
 
     if(!req.body.email){
