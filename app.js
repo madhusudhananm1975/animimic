@@ -247,6 +247,56 @@ app.put('/api/update', async (req, res) => {// user can come to update screen on
 });
 
 
+
+/* DELETE post */
+app.delete('/api/delete', async (req, res) => {
+
+  try{
+
+  if (req.body.id)
+    {
+       if (mongoose.isValidObjectId(req.body.id))
+       {
+        testuser = await User.findById(req.body.id);
+        if (testuser == null)
+        {
+         return res.status(401).json({
+           statusCode: 401,
+           message: `Invalid User id`,
+           data: {},
+         });
+        }
+        else{
+              // Mongo stores the id as `_id` by default
+              const result = await User.deleteOne({ _id: req.body.id });
+              return res.status(200).json({
+                statusCode: 200,
+                message: `User Deleted`,
+               // data: {},
+              });
+        }
+       }
+       else{
+        return res.status(401).json({
+          statusCode: 401,
+          message: `Invalid User id`,
+         // data: {},
+        });
+       }
+  
+    }
+}
+catch (error)
+{
+  return res.status(401).json({
+    statusCode: 401,
+    message: error,
+    data: {},
+  });
+}
+
+});
+
 app.post('/api/reset', async (req, res) => {// user can come to update screen only when logged in.
   try{
 
