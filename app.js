@@ -378,7 +378,7 @@ app.get('/api/user', verifyToken, async (req, res) => {
   }
 });
 
-/* POST Create Blog 
+/* POST Create Blog */
 app.post('/api/blog', async (req, res, next) => {
   //const { blog_id, title, author, content } = req.body;
 
@@ -520,7 +520,7 @@ catch(error){
   });
 }
 
-}); */
+}); 
 
 
 /* Update an existing blog */
@@ -763,7 +763,7 @@ catch (error)
 
 });
 
-/* Get all the blogs 
+/* Get all the blogs */
 app.get('/api/allblogs', async (req, res) => {
   // sort from the latest to the earliest
   const posts = await Blogs.find().sort({ createdAt: 'desc' });
@@ -784,9 +784,9 @@ app.get('/api/allblogs', async (req, res) => {
     });
   }
 
-}); */
+}); 
 
-/* Get a particular blog by author or filtered by combination of author and banner id (considering banner id is used for blog topic 
+/* Get a particular blog by author or filtered by combination of author and banner id (considering banner id is used for blog topic */
 app.get('/api/getblog', async (req, res) => {
   // sort from the latest to the earliest
 //  const posts = await Blogs.find().sort({ createdAt: 'desc' });
@@ -853,7 +853,7 @@ else
 
 }
 
-}); */
+}); 
 
 // Default route
 app.get('/', (req, res) => {
