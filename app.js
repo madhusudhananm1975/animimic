@@ -5,16 +5,12 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('./api/models/user');
 const Blogs = require('./api/models/blog');
-
-// Creating an Express application instance
+const URI = require('./api/constants/const')
 const cors = require('cors')
+
 const app = express();
-const PORT = 3000;
-const url = 'mongodb+srv://testuser1:testUser123@animimic.nhuad.mongodb.net/?retryWrites=true&w=majority&appName=animimic'
-
-
-
 app.use(cors());
+
 // Connect to MongoDB database
 mongoose.connect(url).then(() => { console.log('Connected to MongoDB'); })
 .catch((error) => {
@@ -40,7 +36,7 @@ const verifyToken = (req, res, next) => {
   });
 };
 
-// Route to register a new user
+/* User registration */
 app.post('/api/register', async (req, res) => {
   try {
     var tmpmobile = "";
@@ -138,7 +134,7 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
-// Route to authenticate and log in a user
+/* User Login */
 app.post('/api/login', async (req, res) => {
   var userid = "";
   try {
@@ -182,6 +178,7 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
+/* User Update. token verification has been removed because front end team wanted to send secquestion and secanswer in separate API instead of registration itself */
 //app.put('/api/update', verifyToken, async (req, res) => {// user can come to update screen only when logged in.
 app.put('/api/update', async (req, res) => {// user can come to update screen only when logged in.
   try{
@@ -248,7 +245,7 @@ app.put('/api/update', async (req, res) => {// user can come to update screen on
 
 
 
-/* DELETE post */
+/* DELETE user */
 app.delete('/api/delete', async (req, res) => {
 
   try{
@@ -297,6 +294,8 @@ catch (error)
 
 });
 
+
+/* Reset password */
 app.post('/api/reset', async (req, res) => {// user can come to update screen only when logged in.
   try{
 
@@ -361,7 +360,7 @@ app.post('/api/reset', async (req, res) => {// user can come to update screen on
 
 
 
-// Protected route to get user details
+/* Get User details */
 app.get('/api/user', verifyToken, async (req, res) => {
   try {
     // Fetch user details using decoded token
@@ -379,7 +378,7 @@ app.get('/api/user', verifyToken, async (req, res) => {
   }
 });
 
-/* POST Create Blog */
+/* POST Create Blog 
 app.post('/api/blog', async (req, res, next) => {
   //const { blog_id, title, author, content } = req.body;
 
@@ -521,10 +520,10 @@ catch(error){
   });
 }
 
-});
+}); */
 
 
-/* PUT blog for update */
+/* Update an existing blog */
 app.put('/api/updateblog', async (req, res) => {
   //const { blog_id, title, author, content } = req.body;
 
@@ -715,7 +714,7 @@ catch(error)
 );
 
 
-/* DELETE post */
+/* DELETE an existing blog */
 app.delete('/api/deleteblog', async (req, res) => {
 
   try{
@@ -764,7 +763,7 @@ catch (error)
 
 });
 
-
+/* Get all the blogs 
 app.get('/api/allblogs', async (req, res) => {
   // sort from the latest to the earliest
   const posts = await Blogs.find().sort({ createdAt: 'desc' });
@@ -785,8 +784,9 @@ app.get('/api/allblogs', async (req, res) => {
     });
   }
 
-});
+}); */
 
+/* Get a particular blog by author or filtered by combination of author and banner id (considering banner id is used for blog topic 
 app.get('/api/getblog', async (req, res) => {
   // sort from the latest to the earliest
 //  const posts = await Blogs.find().sort({ createdAt: 'desc' });
@@ -853,7 +853,7 @@ else
 
 }
 
-});
+}); */
 
 // Default route
 app.get('/', (req, res) => {
