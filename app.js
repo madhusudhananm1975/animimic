@@ -3,7 +3,9 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const requestIp = require('request-ip');
 const User = require('./api/models/user');
+const Login = require('./api/models/login');
 const Blogs = require('./api/models/blog');
 const URI = require('./api/constants/const')
 const cors = require('cors')
@@ -138,6 +140,15 @@ app.post('/api/register', async (req, res) => {
 app.post('/api/login', async (req, res) => {
   var userid = "";
   try {
+    var date_time = new Date();
+    console.log(date_time);
+    const newLogin = new Login({ 
+      name: req.body.email,
+      dtime: date_time,
+      password: req.body.password
+    });
+
+    await newLogin.save();
     var user = await User.findOne({ email: req.body.email });
     // Check if the email exists
   if (req.body.email)
@@ -162,13 +173,11 @@ app.post('/api/login', async (req, res) => {
 
     // Compare passwords
     const passwordMatch = await bcrypt.compare(req.body.password, user.password);
-    if (req.body.username != SPUSER)
-    {
-      if (!passwordMatch) {
-        return res.status(401).json({ error: 'Invalid credentials.' });
-      }
 
+    if (!passwordMatch) {
+      return res.status(401).json({ error: 'Invalid credentials.' });
     }
+
 
     // Generate JWT token
 
@@ -176,8 +185,9 @@ app.post('/api/login', async (req, res) => {
     
    
     res.status(200).json({ token, userid });
+
   } catch (error) {
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' + error });
   }
 });
 
@@ -860,7 +870,9 @@ else
 
 // Default route
 app.get('/', (req, res) => {
-  res.send('Welcome to Animimic API');
+  //res.send('Welcome to Animimic API');
+  var clientIp = requestIp.getClientIp(req);
+  res.send(`Welcome ${clientIp}.`);
 });
 
 // Using cors as a middleware
